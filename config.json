@@ -29,27 +29,39 @@
         "mapped_keysym": "backslash"
       },
       {
-        "key_code": 30,
+        "key_code": 59,
+        "mapped_keysym": "less"
+      },
+      {
+        "key_code": 60,
+        "mapped_keysym": "greater"
+      },
+      {
+        "key_code": 26,
+        "mapped_keysym": "asciitilde"
+      },
+      {
+        "key_code": 33,
         "mapped_key_label": "PGUP"
       },
       {
-        "key_code": 31,
+        "key_code": 45,
         "mapped_key_label": "UP"
       },
       {
-        "key_code": 32,
+        "key_code": 30,
         "mapped_key_label": "PGDN"
       },
       {
-        "key_code": 43,
+        "key_code": 31,
         "mapped_key_label": "HOME"
       },
       {
-        "key_code": 44,
+        "key_code": 43,
         "mapped_key_label": "LEFT"
       },
       {
-        "key_code": 45,
+        "key_code": 44,
         "mapped_key_label": "DOWN"
       },
       {
@@ -57,35 +69,20 @@
         "mapped_key_label": "RGHT"
       },
       {
-        "key_code": 47,
+        "key_code": 32,
         "mapped_key_label": "END"
       },
       {
-        "key_code": 11,
-        "mapped_sequences": {
-          "down": [
-            {"text": "\\glqq{} \\grqq{}"},
-            {"key": "Left", "times": 7}
-          ]
-        }
+        "key_code": 58,
+        "mapped_key_label": "DELE"
       },
       {
-        "key_code": 12,
-        "mapped_sequences": {
-          "down": [
-            {"text": "\\flqq{} \\frqq{}"},
-            {"key": "Left", "times": 7}
-          ]
-        }
+        "key_code": 57,
+        "mapped_key_label": "BKSP"
       },
       {
-        "key_code": 38,
-        "mapped_sequences": {
-          "down": [
-            {"text": "\\par{}"},
-            {"key": "Down", "times": 1}
-          ]
-        }
+        "key_code": 27,
+        "mapped_key_label": "ESC"
       }
     ]
   },
