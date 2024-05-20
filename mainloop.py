@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 import json
 import os
@@ -6,6 +6,7 @@ import re
 import socket
 import sys
 import time
+import itertools
 
 try:
     import pyxhook
@@ -15,11 +16,11 @@ try:
 except Exception as e:
     pyxhook = Xlib = None
     xlib_support = False
-    print "Warning:"
-    print e
-    print "No X library support. Snippets and commands are not supported without python-xlib."
-    print "You can still use key remapping as usual."
-    print "You may want to install python-xlib."
+    print("Warning:")
+    print(e)
+    print("No X library support. Snippets and commands are not supported without python-xlib.")
+    print("You can still use key remapping as usual.")
+    print("You may want to install python-xlib.")
     time.sleep(1)
 
 default_path = os.path.dirname(__file__)
@@ -68,8 +69,8 @@ class Mapper:
                         overlay.stop_hooking_keyboard()
                     break
         except Exception as e:
-            print e, ". Another instance of this program is already running. Kill it using 'pkill python2.7' and " \
-                     "restart the program if you want suspend/resume and command overlays to work correctly."
+            print(e, ". Another instance of this program is already running. Kill it using \'pkill python2.7\' and "
+                     "restart the program if you want suspend/resume and command overlays to work correctly.")
 
     def store_used_key_labels(self):
         file_data = ""
@@ -136,7 +137,7 @@ class Mapper:
                 key_label = self.get_key_label(i)
                 codes.append(key_label)
             except AttributeError as e:
-                print "Key code #" + str(i) + " has no key_label defined in xkb_keymap."
+                print("Key code #" + str(i) + " has no key_label defined in xkb_keymap.")
         return codes
 
     def has_overlay(self, key_label):
@@ -152,13 +153,13 @@ class Mapper:
             if self.has_overlay(key_label):
                 old_overlay = re.search(r",\n *overlay[0-9] *= *<.{2,6}>", old_key_def).group(0)
                 new_key_def = new_key_def.replace(old_overlay, "")
-                print key_label + " CAN NOT HAVE ANOTHER OVERLAY. DELETING PREVIOUS OVERLAY!"
+                print(key_label + " CAN NOT HAVE ANOTHER OVERLAY. DELETING PREVIOUS OVERLAY!")
             new_key_def = new_key_def.replace("}",
                                               ",\n overlay" + str(num_overlay) + " = <" + overlay_key_label + "> \n}")
             self.keymap_data = self.keymap_data.replace(old_key_def, new_key_def)
             return True
         except Exception as e:
-            print e
+            print(e)
             return False
 
     def disable_overlay_key_toggling(self, num_overlay):
@@ -182,7 +183,7 @@ class Mapper:
             self.used_key_labels.append(key_label)
             return True
         except AttributeError as e:
-            print e
+            print(e)
             return False
 
     def create_keysym_sections(self, mapping_data):
@@ -191,16 +192,16 @@ class Mapper:
         for mapping in mapping_data:
             if "mapped_keysym" in mapping:
                 if len(available_key_codes) == 0:
-                    print "============================================================"
-                    print "NO FREE KEY CODES AVAILABLE FOR CHARACTER MAPPING!!! "
-                    print "please log back in again"
-                    print "if this problem persists, you may also have exceeded the number of available key codes"
-                    print "============================================================"
+                    print("============================================================")
+                    print("NO FREE KEY CODES AVAILABLE FOR CHARACTER MAPPING!!! ")
+                    print("please log back in again")
+                    print("if this problem persists, you may also have exceeded the number of available key codes")
+                    print("============================================================")
                     return False
                 else:
                     key_label = available_key_codes.pop()
                     if self.create_keysym_section(key_label, mapping["mapped_keysym"]):
-                        print "Found free (unused) key_label and mapped it now: " + key_label
+                        print("Found free (unused) key_label and mapped it now: " + key_label)
                         mapping["mapped_key_label"] = key_label
                     else:
                         available_key_codes.append(key_label)
@@ -219,27 +220,15 @@ class Mapper:
         for mapping in mapping_data:
             if "mapped_sequences" in mapping:
                 sequences = mapping["mapped_sequences"]
-                if "down" in sequences:
-                    down_sequence = sequences["down"]
-                else:
-                    down_sequence = []
-                if "up" in sequences:
-                    up_sequence = sequences["up"]
-                else:
-                    up_sequence = []
-                commands = {
-                    "key down": down_sequence,
-                    "key up": up_sequence
-                }
                 key_label = self.get_key_label(mapping["key_code"])
                 new_key_label = self.get_unused_key_labels().pop()
                 if self.create_keysym_section(new_key_label, "NoSymbol"):
                     if self.add_overlay_key(key_label, new_key_label, overlay.index):
-                        overlay.add_command_mapping(self.get_key_code(new_key_label), commands)
+                        overlay.add_command_mapping(self.get_key_code(new_key_label), sequences)
                     else:
-                        print "Failed mapping commands to ", key_label
+                        print("Failed mapping commands to ", key_label)
                 else:
-                    print "Failed creating new empty NoSymbol section for ", mapping
+                    print("Failed creating new empty NoSymbol section for ", mapping)
 
     def configure_keymap(self):
         self.capture_keymap(self.keymap_file)
@@ -283,20 +272,29 @@ class Mapper:
 
     def load_keymap_file(self, filename):
         self.store_used_key_labels()
-        print "Applying keymap settings..."
+        print("Applying keymap settings...")
         output = os.popen("xkbcomp -xkb %s $DISPLAY" % filename).read()
         if "rror" not in output:
-            print "Successfully applied settings."
+            print("Successfully applied settings.")
             os.remove(filename)
         else:
-            print "Error while applying settings."
-        print "INFO: still " + str(len(self.get_unused_key_labels())) + " key_labels available for custom mappings."
+            print("Error while applying settings.")
+        print("INFO: still " + str(len(self.get_unused_key_labels())) + " key_labels available for custom mappings.")
 
 
 class CommandOverlay:
     def __init__(self, index, overlay_enable_key_code, overlay_enable_mode):
         self.command_mapping = {}
         self.index = index
+
+        self.__available_modifiers = {
+            "None": 0,
+            "Shift": Xlib.X.ShiftMask,
+            "Control": Xlib.X.ControlMask,
+            "Alt": Xlib.X.Mod1Mask,
+        }
+
+        self.__available_modifier_state_mask = sum(self.__available_modifiers.values())
 
         self.key_code = int(overlay_enable_key_code)
         if overlay_enable_mode == "hold":
@@ -320,41 +318,114 @@ class CommandOverlay:
     def stop_hooking_keyboard(self):
         self.hookManager.cancel()
 
-    def add_command_mapping(self, key_code, commands):
+    def add_command_mapping(self, key_code, sequences):
         key_code = int(key_code)
-        self.command_mapping[key_code] = commands
+        self.__adjust_command_sequences_prop_names(sequences)
+        self.command_mapping[key_code] = self.__create_combined_modifiers_commands_map(sequences)
 
     def handle_key_event(self, event):
         if event.ScanCode == self.key_code:
             self.on_overlay_key(event.MessageName)
         else:
             if self.overlay_active and event.ScanCode in self.command_mapping:
-                sequence = self.command_mapping[event.ScanCode][event.MessageName]
-                self.execute_command_sequence(sequence, current_modifier_state=event.XLibEvent.state)
+                # restrict the state to only the modifiers available here
+                restricted_state = event.XLibEvent.state & self.__available_modifier_state_mask
+                command_sequences = self.command_mapping[event.ScanCode][restricted_state]
+                # which modifiers triggered the command?
+                captured_state = command_sequences["__trigger_modifier_state__"]
+                # which modifiers are pressed additionally that we must continue to hold?
+                forwarded_state = restricted_state - captured_state
+                sequence = command_sequences[event.MessageName]
+                self.execute_command_sequence(sequence, current_modifier_state=forwarded_state)
 
-    def __parse_modifier_state(self, command):
-        modifier_state = 0
+    def __adjust_command_sequences_prop_names(self, command_sequences):
+        if "down" in command_sequences:
+            command_sequences["key down"] = command_sequences["down"]
+        if "up" in command_sequences:
+            command_sequences["key up"] = command_sequences["up"]
+        if "key down" not in command_sequences:
+            command_sequences["key down"] = []
+        if "key up" not in command_sequences:
+            command_sequences["key up"] = []
+
+    def __create_combined_modifiers_commands_map(self, command_sequences):
+        # all possible modifier states, thus any combinations of available modifiers summed up
+        all_possible_combined_states = [0]  # 0 = state for no modifiers
+
+        # A map that maps any modifier combination to a command.
+        # A command is assigned to a modifier combination, iff its trigger state ANDs (&) with the combination and
+        # at the same time no command is defined for a larger combination that fits the combination
+        all_possible_states_command_map = {}
+
+        for i in range(0, len(self.__available_modifiers) + 1):
+            # get all modifier combinations for length i (unfortunately includes different ordering as well)
+            combinations_length_i = itertools.combinations(self.__available_modifiers.values(), i)
+            # sum up items of each combination
+            states_length_i = [sum(combination) for combination in combinations_length_i]
+            # eliminate duplicates
+            states_length_i = list(set(states_length_i))
+            all_possible_combined_states += states_length_i
+
+        command_sequences["__trigger_modifier_state__"] = 0
+
+        for state_combination in all_possible_combined_states:
+            all_possible_states_command_map[state_combination] = command_sequences
+
+        if "if_modifiers" in command_sequences:
+            state_command_list = []
+            state_command_map = {}
+
+            for modifiers, command in command_sequences["if_modifiers"].items():
+                state = self.__parse_modifier_state(modifiers)
+                state_command_list.append(state)
+                command["__trigger_modifier_state__"] = state
+                self.__adjust_command_sequences_prop_names(command)
+                state_command_map[state] = command
+
+            state_command_list.sort()
+
+            for state in all_possible_combined_states:
+                command = None
+                for trigger_state in state_command_list:
+                    if state & trigger_state > 0:
+                        command = state_command_map[trigger_state]
+                if command:
+                    all_possible_states_command_map[state] = command
+
+        return all_possible_states_command_map
+
+    def __get_active_modifiers(self, modifier_state):
+        modifiers = []
+        for modifier, state in self.__available_modifiers:
+            if modifier_state & state:
+                modifiers.append(modifier)
+        return modifiers
+
+    def __parse_modifier_state(self, modifiers):
+        parsed_state = 0
+        modifiers_list = []
+        if isinstance(modifiers, list):
+            modifiers_list = modifiers
+        # when the user gave us a plus-separated string with modifiers, split them to obtain a list
+        if isinstance(modifiers, str):
+            modifiers_list = modifiers.split("+")
+        # remove space before and after each modifier
+        modifiers_list = [mod.strip(" ") for mod in modifiers_list]
+        for modifier, state in self.__available_modifiers.items():
+            if modifier in modifiers_list:
+                parsed_state = parsed_state | state
+        return parsed_state
+
+    def __get_user_added_modifiers(self, command):
         if "modifiers" in command:
-            modifiers = []
-            if isinstance(command["modifiers"], list):
-                modifiers = command["modifiers"]
-            # when the user gave us a plus-separated string with modifiers, split them to obtain a list
-            if isinstance(command["modifiers"], basestring):
-                modifiers = command["modifiers"].split("+")
-            # remove space before and after modifier
-            modifiers = [mod.strip(" ") for mod in modifiers]
-            if "Shift" in modifiers:
-                modifier_state = modifier_state | Xlib.X.ShiftMask
-            if "Control" in modifiers:
-                modifier_state = modifier_state | Xlib.X.ControlMask
-            if "Alt" in modifiers:
-                modifier_state = modifier_state | Xlib.X.Mod1Mask
-        return modifier_state
+            return self.__parse_modifier_state(command["modifiers"])
+        else:
+            return 0
 
     def execute_command_sequence(self, sequence, current_modifier_state=0):
         for command in sequence:
             try:
-                if isinstance(command, basestring):
+                if isinstance(command, str):
                     os.system(command)
                 elif isinstance(command, dict):
                     times = 1
@@ -364,19 +435,17 @@ class CommandOverlay:
                     key = command["key"] if "key" in command else None
                     key_code = command["key_code"] if "key_code" in command else None
                     # OR the user-added modifiers with the current modifier state,
-                    # so that additionally pressed modifier do not get lost
-                    modifier_state = self.__parse_modifier_state(command) | current_modifier_state
+                    # so that modifiers that are currently hold by the user do not get lost
+                    modifier_state = self.__get_user_added_modifiers(command) | current_modifier_state
                     for i in range(times):
                         if text:
                             self.key_faker.type_text(text)
-                            if modifier_state != 0:
-                                print "Cannot combine text typing with modifiers."
                         elif key:
                             self.key_faker.send_key(key, state=modifier_state)
                         elif key_code:
                             self.key_faker.send_key_code(key_code, state=modifier_state)
             except Exception as e:
-                print "Error executing user defined command: ", e
+                print("Error executing user defined command: ", e)
 
     def toggle_overlay_key(self, event_message):
         if event_message == "key down":
@@ -467,6 +536,7 @@ class KeyFaker:
             detail=key_code
         )
         window.send_event(key_release_event, propagate=True)
+
 
 if __name__ == "__main__":
     mapper = Mapper()
