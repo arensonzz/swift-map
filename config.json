@@ -41,48 +41,85 @@
         "mapped_keysym": "asciitilde"
       },
       {
-        "key_code": 33,
-        "mapped_key_label": "PGUP"
-      },
-      {
-        "key_code": 45,
-        "mapped_key_label": "UP"
-      },
-      {
-        "key_code": 30,
-        "mapped_key_label": "PGDN"
-      },
-      {
-        "key_code": 31,
-        "mapped_key_label": "HOME"
-      },
-      {
         "key_code": 43,
-        "mapped_key_label": "LEFT"
-      },
-      {
-        "key_code": 44,
-        "mapped_key_label": "DOWN"
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Left", "times": 1}
+          ]
+        }
       },
       {
         "key_code": 46,
-        "mapped_key_label": "RGHT"
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Right", "times": 1}
+          ]
+        }
+      },
+      {
+        "key_code": 44,
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Down", "times": 1}
+          ]
+        }
+      },
+      {
+        "key_code": 45,
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Up", "times": 1}
+          ]
+        }
+      },
+      {
+        "key_code": 31,
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Home", "times": 1}
+          ]
+        }
       },
       {
         "key_code": 32,
-        "mapped_key_label": "END"
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "End", "times": 1}
+          ]
+        }
       },
       {
-        "key_code": 58,
-        "mapped_key_label": "DELE"
+        "key_code": 30,
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Next", "times": 1}
+          ]
+        }
       },
       {
-        "key_code": 57,
-        "mapped_key_label": "BKSP"
+        "key_code": 33,
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Prior", "times": 1}
+          ]
+        }
       },
       {
         "key_code": 27,
-        "mapped_key_label": "ESC"
+        "mapped_sequences": {
+          "down": [
+            { "key": "Pause", "times": 2},
+            { "key": "Escape", "times": 1}
+          ]
+        }
       }
     ]
   },
